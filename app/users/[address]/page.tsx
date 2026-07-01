@@ -22,16 +22,13 @@ import {
   serializeData,
 } from '../../../utils/helpers';
 
-export default async function UserPage({
-  params,
-}: {
-  params: { address: string };
-}) {
+export default async function UserPage({ params }) {
+  const awaitedParams = await params;
   const [userORM, statsORM, historicalStatsORM, networkDifficulty] =
     await Promise.all([
-      getUserWithWorkersAndStats(params.address),
+      getUserWithWorkersAndStats(awaitedParams.address),
       getLatestPoolStats(),
-      getUserHistoricalStats(params.address),
+      getUserHistoricalStats(awaitedParams.address),
       getNetworkDifficulty(),
     ]);
 
@@ -233,8 +230,7 @@ export default async function UserPage({
       </div>
 
       <UserStatsCharts userStats={historicalStats} />
-
-      <WorkersTable workers={user.workers} address={params.address} />
+      <WorkersTable workers={user.workers} address={awaitedParams.address} />
     </div>
   );
 }

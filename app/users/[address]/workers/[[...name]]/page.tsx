@@ -13,13 +13,11 @@ import {
   serializeData,
 } from '../../../../../utils/helpers';
 
-export default async function WorkerPage({
-  params,
-}: {
-  params: { address: string; name?: string[] };
-}) {
-  const decodedName = params.name ? decodeURIComponent(params.name[0]) : '';
-  const workerORM = await getWorkerWithStats(params.address, decodedName);
+export default async function WorkerPage({ params }) {
+  const awaitedParams = await params;
+  const namePart = awaitedParams.name?.[0];
+  const decodedName = namePart && namePart !== '' ? decodeURIComponent(namePart) : undefined;
+  const workerORM = await getWorkerWithStats(awaitedParams.address, decodedName);
 
   if (!workerORM) {
     notFound();
@@ -54,7 +52,7 @@ export default async function WorkerPage({
   return (
     <div className="container mx-auto p-4">
       <div className="flex items-center gap-2">
-        <Link href={`/users/${params.address}`} className="text-sm btn">
+        <Link href={`/users/${awaitedParams.address}`} className="text-sm btn">
           {/* Inline SVG for Arrow Left Icon */}
           <svg
             className="w-4 h-4"
@@ -73,7 +71,7 @@ export default async function WorkerPage({
           Back to User
         </Link>
         <h1 className="text-3xl font-bold text-accent">
-          {worker.name || <span className="italic">Unnamed Worker</span>}
+          {worker.name ?? <span className="italic">Unnamed Worker</span>}
         </h1>
       </div>
 
