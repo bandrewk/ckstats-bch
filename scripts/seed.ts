@@ -62,7 +62,11 @@ async function seed() {
       diff: stats.diff,
       accepted: stats.accepted,
       rejected: stats.rejected,
-      bestshare: stats.bestshare,
+      // Some pool implementations report bestshare as a floating point
+      // value while PoolStats.bestshare is a bigint column. Without
+      // rounding the insert fails with:
+      //   invalid input syntax for type bigint
+      bestshare: BigInt(Math.round(Number(stats.bestshare ?? 0))),
       SPS1m: stats.SPS1m,
       SPS5m: stats.SPS5m,
       SPS15m: stats.SPS15m,
