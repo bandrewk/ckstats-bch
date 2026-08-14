@@ -66,15 +66,5 @@
     "ts-jest": "^29.4.11",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
-  },
-  "pnpm": {
-    "overrides": {
-      "lodash": "^4.17.21",
-      "base-x": "^4.0.1",
-      "cross-spawn": "^7.0.5"
-    },
-    "onlyBuiltDependencies": [
-      "sharp"
-    ]
   }
 }

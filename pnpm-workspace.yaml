@@ -10,6 +10,11 @@ allowBuilds:
   sharp: true
   unrs-resolver: true
 
+# pnpm 10 reads the same allowance under its older name.
+onlyBuiltDependencies:
+  - sharp
+  - unrs-resolver
+
 # pnpm 11 no longer reads pnpm.overrides from package.json either. These are
 # security floors, so they are restated here to keep them in effect.
 overrides:
