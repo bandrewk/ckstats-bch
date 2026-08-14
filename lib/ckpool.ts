@@ -198,7 +198,11 @@ export class CKPoolAPI {
    * @returns parsed user data JSON
    */
   async user(address: string): Promise<unknown> {
-    if (address.length === 0 || /[^a-zA-Z0-9]/.test(address)) {
+    // CashAddr contains a colon (bitcoincash:q...). This stays a path
+    // traversal guard because the address is interpolated into a path
+    // below; only ':' is added. Slash, backslash and dot remain blocked,
+    // and a colon cannot change directory level.
+    if (address.length === 0 || /[^a-zA-Z0-9:]/.test(address)) {
       throw new CKPoolError(
         CKPoolErrorCode.INVALID,
         'Invalid address: only alphanumeric characters allowed'
