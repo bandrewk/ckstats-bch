@@ -157,7 +157,13 @@ function buildUserDataMap(fetched: UsersData[]): Map<string, {
     userDataMap.set(address, {
       changes: {
         address,
-        authorised: userData.authorised.toString(),
+        // Not every pool reports this field. Passing undefined lets the
+        // COALESCE in the upsert below keep the stored value; passing 0
+        // would overwrite it and render as 1970-01-01.
+        authorised:
+          userData.authorised !== undefined
+            ? userData.authorised.toString()
+            : undefined,
         isActive: true,
       },
       userStats: {
@@ -200,7 +206,14 @@ async function updateUsersInBatch(manager: any, userChanges: any[]): Promise<num
   const result = await manager.query(`
     UPDATE "User" AS u
     SET
-      authorised = COALESCE(v.authorised::bigint, u.authorised),
+      -- Treat 0 as "not set". The column defaults to '0', so a user whose
+      -- pool never reports this field would otherwise render as 1970-01-01.
+      -- Falls back to when the record was first created.
+      authorised = COALESCE(
+        NULLIF(v.authorised::bigint, 0),
+        NULLIF(u.authorised, 0),
+        EXTRACT(EPOCH FROM u."createdAt")::bigint
+      ),
       "isActive" = v.isActive,
       "updatedAt" = NOW()
     FROM (VALUES ${valuesStr}) AS v (address, authorised, isActive)
