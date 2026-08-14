@@ -31,12 +31,6 @@ every few minutes:
 Values older than one hour are rejected rather than displayed, so a stalled
 job shows no odds instead of wrong ones.
 
-## Notes for upstream
-
-Two of these fixes are not Bitcoin Cash specific and apply to upstream as
-well: decoding percent-encoded address route parameters, and not rendering
-`authorised` as 1970-01-01.
-
 ---
 
 # CK Stats
