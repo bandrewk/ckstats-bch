@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: lint, test, build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Test
+        run: pnpm test
+
+      # next build needs no reachable database. The queries issued while
+      # prerendering fail gracefully and the affected pages render empty, so
+      # no service container is required. The values below only keep the
+      # build deterministic.
+      - name: Build
+        run: pnpm build
+        env:
+          API_URL: /nonexistent
+          DB_HOST: 127.0.0.1
+          DB_PORT: "59999"
+          DB_USER: ci
+          DB_PASSWORD: ci
+          DB_NAME: ci
+          NODE_OPTIONS: --max-old-space-size=4096
