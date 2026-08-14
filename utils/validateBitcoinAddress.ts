@@ -1,6 +1,8 @@
 import ecc from '@bitcoinerlab/secp256k1';
 import * as bitcoin from 'bitcoinjs-lib';
 
+import { validateCashAddress } from './validateCashAddress';
+
 // Init ECC in case a taproot address is specified
 bitcoin.initEccLib(ecc);
 
@@ -15,6 +17,10 @@ export function validateBitcoinAddress(address: string): boolean {
   // Quick sanity checks
   if (typeof address !== 'string') return false;
   if (address.length === 0) return false;
+
+  // Bitcoin Cash CashAddr (bitcoincash:q..., bchtest:..., bchreg:...).
+  // bitcoinjs-lib does not know this format.
+  if (validateCashAddress(address)) return true;
 
   // Try mainnet first (covers 1/3, bc1q, bc1p)
   try {
