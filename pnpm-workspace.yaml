@@ -3,3 +3,9 @@ packages:
 
 # Project-wide settings
 minimumReleaseAge: 10080  # 7 days in minutes
+
+# pnpm 11 no longer reads pnpm.onlyBuiltDependencies from package.json,
+# which makes every `pnpm run <script>` fail with ERR_PNPM_IGNORED_BUILDS.
+allowBuilds:
+  sharp: true
+  unrs-resolver: true
