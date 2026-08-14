@@ -1,6 +1,6 @@
 # CKstats for Bitcoin Cash
 
-[![CI](https://github.com/bandrewk/ckstats-bch/actions/workflows/ci.yml/badge.svg)](https://github.com/bandrewk/ckstats-bch/actions/workflows/ci.yml)
+[![CI](https://github.com/bandrewk/ckstats-bch/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/bandrewk/ckstats-bch/actions/workflows/ci.yml)
 
 A fork of [mrv777/ckstats](https://github.com/mrv777/ckstats) adapted for
 Bitcoin Cash pools, in particular
