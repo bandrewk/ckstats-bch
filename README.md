@@ -21,15 +21,70 @@ Bitcoin Cash pools, in particular
 ## Network difficulty file
 
 `getNetworkDifficulty()` reads `/var/lib/bch-network/difficulty.json`; override
-the path with `NETWORK_INFO_FILE`. Populate it from your own node, for example
-every few minutes:
+the path with `NETWORK_INFO_FILE`. The file looks like this:
 
 ```json
-{"difficulty": 463925820577.65, "updated": 1786723936}
+{"difficulty": 463925820577.65, "blocks": 964070, "chain": "main", "updated": 1786723936}
 ```
 
-Values older than one hour are rejected rather than displayed, so a stalled
-job shows no odds instead of wrong ones.
+Only `difficulty` and `updated` are read. Values older than one hour are
+rejected rather than displayed, so a stalled job shows no odds instead of
+wrong ones.
+
+[`contrib/network-difficulty.sh`](contrib/network-difficulty.sh) writes it
+from your own node:
+
+```bash
+install -m 0755 contrib/network-difficulty.sh /usr/local/bin/
+```
+
+It renames the file into place rather than writing in place, so a reader
+never sees it half written, and a failed run leaves the previous file alone
+rather than replacing it with nothing. Configure it with the environment:
+
+| Variable | Default |
+|---|---|
+| `NETWORK_INFO_FILE` | `/var/lib/bch-network/difficulty.json` |
+| `BITCOIN_CLI` | `bitcoin-cli` from `PATH` |
+| `BITCOIN_DATADIR` | unset, let the cli decide |
+
+Run it periodically. With systemd, as the user that may talk to your node:
+
+```ini
+# /etc/systemd/system/network-difficulty.service
+[Unit]
+Description=Export the network difficulty for ckstats
+After=bitcoind.service
+
+[Service]
+Type=oneshot
+User=bitcoin
+ExecStart=/usr/local/bin/network-difficulty.sh
+# Environment=BITCOIN_DATADIR=/var/lib/bitcoin
+```
+
+```ini
+# /etc/systemd/system/network-difficulty.timer
+[Unit]
+Description=Export the network difficulty every five minutes
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=5min
+
+[Install]
+WantedBy=timers.target
+```
+
+```bash
+systemctl enable --now network-difficulty.timer
+```
+
+A cron entry works just as well:
+
+```
+*/5 * * * * /usr/local/bin/network-difficulty.sh
+```
 
 ---
 
