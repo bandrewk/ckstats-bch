@@ -1,3 +1,42 @@
+# CKstats for Bitcoin Cash
+
+A fork of [mrv777/ckstats](https://github.com/mrv777/ckstats) adapted for
+Bitcoin Cash pools, in particular
+[asicseer-pool](https://github.com/cculianu/asicseer-pool).
+
+## What is different
+
+- **CashAddr addresses** are accepted and validated (`bitcoincash:q...`).
+- **Percent-encoded route parameters** are decoded before database lookups, so
+  an address containing a colon resolves instead of rendering a 404.
+- **asicseer-pool field names** are handled: `bestshare_alltime` as an alias
+  for `bestever`, and a missing `authorised` field no longer renders as
+  1970-01-01.
+- **A fractional `bestshare`** is rounded before it reaches the bigint column.
+- **Network difficulty** is read from a local file instead of mempool.space,
+  which serves Bitcoin difficulty.
+
+## Network difficulty file
+
+`getNetworkDifficulty()` reads `/var/lib/bch-network/difficulty.json`; override
+the path with `NETWORK_INFO_FILE`. Populate it from your own node, for example
+every few minutes:
+
+```json
+{"difficulty": 463925820577.65, "updated": 1786723936}
+```
+
+Values older than one hour are rejected rather than displayed, so a stalled
+job shows no odds instead of wrong ones.
+
+## Notes for upstream
+
+Two of these fixes are not Bitcoin Cash specific and apply to upstream as
+well: decoding percent-encoded address route parameters, and not rendering
+`authorised` as 1970-01-01.
+
+---
+
 # CK Stats
 
 This project displays real-time and historical statistics for the CKPool Bitcoin mining pool using data from their API.
