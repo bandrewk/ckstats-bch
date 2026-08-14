@@ -9,3 +9,10 @@ minimumReleaseAge: 10080  # 7 days in minutes
 allowBuilds:
   sharp: true
   unrs-resolver: true
+
+# pnpm 11 no longer reads pnpm.overrides from package.json either. These are
+# security floors, so they are restated here to keep them in effect.
+overrides:
+  lodash: ^4.17.21
+  base-x: ^4.0.1
+  cross-spawn: ^7.0.5
