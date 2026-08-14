@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+
 import NodeCache from 'node-cache';
 
 import { CKPoolAPI, CKPoolError, CKPoolErrorCode } from './ckpool';
@@ -64,19 +66,34 @@ export async function getNetworkDifficulty(): Promise<number | null> {
   }
 
   try {
-    const response = await fetch('https://mempool.space/api/blocks', {
-      signal: AbortSignal.timeout(5000),
-    });
+    // mempool.space serves Bitcoin difficulty, which is wrong for any other
+    // chain and produces block odds that are off by orders of magnitude.
+    //
+    // Read it from a local file instead. Populate the file from your own
+    // node, for example with a periodic job running:
+    //
+    //   bitcoin-cli getblockchaininfo
+    //
+    // and writing {"difficulty": <number>, "updated": <unix seconds>}.
+    // Override the path with NETWORK_INFO_FILE.
+    const raw = await readFile(
+      process.env.NETWORK_INFO_FILE ?? '/var/lib/bch-network/difficulty.json',
+      'utf8'
+    );
+    const info = JSON.parse(raw) as {
+      difficulty?: number;
+      updated?: number;
+    };
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch network difficulty: ${response.status}`);
+    // Prefer no value over a stale one.
+    const ageSeconds = Date.now() / 1000 - (info.updated ?? 0);
+    if (!Number.isFinite(ageSeconds) || ageSeconds > 3600) {
+      throw new Error(
+        `Network difficulty file is stale (${Math.round(ageSeconds)}s)`
+      );
     }
 
-    const blocks = (await response.json()) as Array<{
-      difficulty?: number;
-    }>;
-
-    const difficulty = blocks?.[0]?.difficulty;
+    const difficulty = info.difficulty;
     if (
       typeof difficulty !== 'number' ||
       !Number.isFinite(difficulty) ||
