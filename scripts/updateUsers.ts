@@ -10,6 +10,20 @@ import { convertHashrate } from '../utils/helpers';
 /**
  * Raw worker payload returned by CKPool API for a single worker.
  */
+/**
+ * Pool implementations differ in how they report the all-time best share:
+ * ckpool uses "bestever" with an integer, asicseer-pool uses
+ * "bestshare_alltime" with a floating point value. Without normalising,
+ * BigInt() receives undefined or a fractional value and throws.
+ */
+function bestEverOf(d: {
+  bestever?: string | number;
+  bestshare_alltime?: string | number;
+}): bigint {
+  const raw = d.bestever ?? d.bestshare_alltime ?? 0;
+  return BigInt(Math.round(Number(raw)));
+}
+
 interface WorkerData {
   workername: string;
   hashrate1m: number;
@@ -20,14 +34,15 @@ interface WorkerData {
   lastshare: number;
   shares: string;
   bestshare: string;
-  bestever: string;
+  bestever?: string;
+  bestshare_alltime?: string;
 }
 
 /**
  * Raw user payload returned by CKPool API for a single address.
  */
 interface UserData {
-  authorised: number;
+  authorised?: number;
   hashrate1m: number;
   hashrate5m: number;
   hashrate1hr: number;
@@ -37,7 +52,8 @@ interface UserData {
   workers: number;
   shares: string;
   bestshare: string;
-  bestever: string;
+  bestever?: string;
+  bestshare_alltime?: string;
   worker: WorkerData[];
 }
 
@@ -109,7 +125,7 @@ function buildUserDataMap(fetched: UsersData[]): Map<string, {
         lastUpdate: new Date(workerData.lastshare * 1000),
         shares: BigInt(workerData.shares).toString(),
         bestShare: parseFloat(workerData.bestshare),
-        bestEver: BigInt(workerData.bestever).toString(),
+        bestEver: bestEverOf(workerData).toString(),
         updatedAt: new Date(),
       };
 
@@ -155,7 +171,7 @@ function buildUserDataMap(fetched: UsersData[]): Map<string, {
         workerCount: userData.workers,
         shares: BigInt(userData.shares).toString(),
         bestShare: parseFloat(userData.bestshare),
-        bestEver: BigInt(userData.bestever).toString(),
+        bestEver: bestEverOf(userData).toString(),
       },
       workers,
     });
