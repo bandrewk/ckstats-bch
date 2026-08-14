@@ -128,7 +128,26 @@ export async function getHistoricalPoolStats(): Promise<PoolStats[]> {
  * @param address - Bitcoin address of the user
  * @returns user entity with workers and latest stats, or null if missing
  */
+/**
+ * Next.js passes dynamic route parameters percent-encoded. Addresses that
+ * contain reserved characters, such as the colon in a Bitcoin Cash CashAddr,
+ * therefore arrive as "bitcoincash%3Aq..." while the database stores the
+ * decoded form. Without normalising, the lookup misses and the page renders
+ * a 404 even though the record exists.
+ *
+ * Use for database lookups only. Links must keep the encoded form.
+ */
+function normalizeAddress<T extends string | undefined>(address: T): T {
+  if (typeof address !== 'string' || !address.includes('%')) return address;
+  try {
+    return decodeURIComponent(address) as T;
+  } catch {
+    return address;
+  }
+}
+
 export async function getUserWithWorkersAndStats(address: string | undefined) {
+  address = normalizeAddress(address);
   if (!address) return null;
   const db = await getDb();
   const userRepo = db.getRepository(User);
@@ -165,6 +184,7 @@ export async function getUserWithWorkersAndStats(address: string | undefined) {
  * @returns list of UserStats rows ordered newest first
  */
 export async function getUserHistoricalStats(address: string | undefined) {
+  address = normalizeAddress(address);
   if (!address) return [];
   const db = await getDb();
   const repository = db.getRepository(UserStats);
@@ -188,6 +208,7 @@ export async function getWorkerWithStats(
   userAddress: string | undefined,
   workerName: string | undefined
 ) {
+  userAddress = normalizeAddress(userAddress);
   if (!userAddress) return undefined;
   const db = await getDb();
   const repository = db.getRepository(Worker);
@@ -328,6 +349,7 @@ export async function getTopUserHashrates(limit: number = 10) {
  * @param address - Bitcoin address of the user to reactivate
  */
 export async function resetUserActive(address: string): Promise<void> {
+  address = normalizeAddress(address);
   const db = await getDb();
   const userRepository = db.getRepository(User);
   await userRepository.update(address, { isActive: true });
@@ -339,6 +361,7 @@ export async function resetUserActive(address: string): Promise<void> {
  * @param address - Bitcoin address of the user to update
  */
 export async function updateSingleUser(address: string): Promise<void> {
+  address = normalizeAddress(address);
   console.log('Attempting to update user stats for:', address);
 
   try {
